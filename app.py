@@ -1,119 +1,127 @@
 import streamlit as st
-import google.generativeai as genai
 from PIL import Image
+import google.generativeai as genai
+import os
+from dotenv import load_dotenv
 import json
 
-# ==========================================
-# KONFIGURASI HALAMAN
-# ==========================================
-st.set_page_config(page_title="CekGizi - Deteksi Nutrisi", page_icon="🍔", layout="centered")
+# ====================== CONFIG ======================
+st.set_page_config(
+    page_title="CekGizi",
+    page_icon="🍲",
+    layout="centered",
+    initial_sidebar_state="expanded"
+)
 
-# ==========================================
-# MENGAMBIL API KEY DARI STREAMLIT SECRETS
-# ==========================================
-try:
-    api_key = st.secrets["GEMINI_API_KEY"]
-except KeyError:
-    st.error("⚠️ API Key belum dimasukkan! Pastikan kamu sudah mengisi Advanced Settings > Secrets di Streamlit.")
+st.title("🍲 CekGizi")
+st.markdown("**Deteksi Kalori & Nutrisi Makanan dengan AI**")
+st.caption("Ambil foto → Langsung tahu gizinya! 📱💻")
+
+# Load API Key
+load_dotenv()
+
+def get_api_key():
+    if "GEMINI_API_KEY" in st.secrets:
+        return st.secrets["GEMINI_API_KEY"]
+    return os.getenv("GEMINI_API_KEY")
+
+api_key = get_api_key()
+
+if not api_key:
+    st.error("❌ API Key Gemini belum ditemukan. Lihat instruksi di bawah.")
     st.stop()
 
-# Menyalakan mesin AI Gemini
 genai.configure(api_key=api_key)
-model = genai.GenerativeModel('gemini-1.5-flash-latest')
+model = genai.GenerativeModel('gemini-1.5-flash')
 
-# ==========================================
-# FUNGSI BERTANYA KE AI (VERSI LEBIH AMAN)
-# ==========================================
-def analyze_food_image(image):
-    system_prompt = """
-    Kamu adalah ahli gizi profesional. Tugasmu menganalisis foto makanan ini.
-    Berikan estimasi nutrisinya untuk 1 porsi standar.
-    
-    PENTING: Kamu HANYA boleh merespons dengan format JSON murni. Jangan ada kalimat pembuka/penutup.
-    Format wajib:
-    {
-        "nama_makanan": "Nama Makanan",
-        "kalori": 250,
-        "protein": 10,
-        "karbohidrat": 30,
-        "lemak": 15,
-        "tips_kesehatan": "Saran konsumsi."
-    }
-    """
-    
-    try:
-        # PENTING: Mengubah gambar ke format dasar (RGB) agar AI tidak bingung
-        if image.mode != 'RGB':
-            image = image.convert('RGB')
-            
-        response = model.generate_content([system_prompt, image])
-        
-        # Mengambil teks balasan
-        response_text = response.text
-        
-        # Membersihkan tanda kutip backtick (```) dari respons AI jika ada
-        if "```json" in response_text:
-            response_text = response_text.split("```json")[1].split("```")[0].strip()
-        elif "```" in response_text:
-            response_text = response_text.split("```")[1].split("```")[0].strip()
-            
-        data = json.loads(response_text)
-        return data
-        
-    except json.JSONDecodeError:
-        # Jika AI gagal memberikan JSON, tampilkan balasan ngawurnya
-        return {"error": f"AI menjawab dengan format yang salah. Jawaban AI: {response.text}"}
-    except Exception as e:
-        # Jika ada error dari sistem (misal API limit, atau koneksi)
-        return {"error": f"Sistem Google merespons: {str(e)}"}
+# System Prompt yang lebih baik
+SYSTEM_PROMPT = """
+Kamu adalah ahli nutrisi profesional. Analisis gambar makanan dengan teliti.
 
-# ==========================================
-# TAMPILAN APLIKASI WEB
-# ==========================================
-st.title("🥗 CekGizi")
-st.markdown("**Deteksi Kalori dan Gizi Jajananmu Sekali Jepret!**")
+Jawab **hanya** dalam format JSON berikut, tanpa kata-kata tambahan:
 
-tab_kamera, tab_galeri = st.tabs(["📸 Ambil Foto", "📂 Unggah Galeri"])
+{
+  "nama_makanan": "Nama makanan yang jelas",
+  "kalori": 0,
+  "protein": 0,
+  "karbohidrat": 0,
+  "lemak": 0,
+  "tips": "Tips kesehatan singkat dan berguna (maksimal 1 kalimat)"
+}
 
-image_file = None
+Gunakan angka bulat untuk nilai nutrisi.
+"""
 
-with tab_kamera:
-    kamera = st.camera_input("Foto jajananmu:")
-    if kamera:
-        image_file = kamera
+# ====================== UPLOAD GAMBAR ======================
+st.subheader("📸 Kirim Foto Makananmu")
 
-with tab_galeri:
-    galeri = st.file_uploader("Atau pilih foto dari galeri HP...", type=["jpg", "jpeg", "png"])
-    if galeri:
-        image_file = galeri
+col1, col2 = st.columns([2, 1])
+with col1:
+    uploaded_file = st.file_uploader("Pilih foto dari galeri", type=["jpg", "jpeg", "png"])
 
-# ==========================================
-# JIKA GAMBAR SUDAH DIMASUKKAN
-# ==========================================
-if image_file is not None:
+with col2:
+    camera_file = st.camera_input("Atau ambil foto langsung")
+
+# Pilih gambar
+if camera_file is not None:
+    image_file = camera_file
+    st.success("📸 Foto dari kamera diambil")
+elif uploaded_file is not None:
+    image_file = uploaded_file
+else:
+    image_file = None
+
+if image_file:
     image = Image.open(image_file)
-    st.image(image, caption="Foto yang akan dianalisis", use_container_width=True)
+    st.image(image, caption="Foto yang akan dianalisis", use_column_width=True)
+
+    if st.button("🔍 Analisis dengan AI", type="primary", use_container_width=True):
+        with st.spinner("🤖 Gemini AI sedang menganalisis gambar..."):
+            try:
+                response = model.generate_content(
+                    [SYSTEM_PROMPT, image],
+                    generation_config={
+                        "temperature": 0.3,
+                        "max_output_tokens": 600,
+                    }
+                )
+                
+                # Parse JSON
+                result_text = response.text.strip()
+                data = json.loads(result_text)
+                
+                # Hasil
+                st.success("✅ Analisis Berhasil!")
+                
+                st.subheader(f"🍽️ {data['nama_makanan']}")
+                
+                # Metrics
+                cols = st.columns(4)
+                cols[0].metric("🔥 Kalori", f"{data['kalori']} kcal")
+                cols[1].metric("🥩 Protein", f"{data['protein']} g")
+                cols[2].metric("🍚 Karbo", f"{data['karbohidrat']} g")
+                cols[3].metric("🧈 Lemak", f"{data['lemak']} g")
+                
+                st.info(f"💡 **Tips Kesehatan:** {data['tips']}")
+                
+                st.caption("⚠️ Ini adalah estimasi AI. Gunakan sebagai referensi saja.")
+                
+            except json.JSONDecodeError:
+                st.error("⚠️ AI mengembalikan format yang tidak sesuai. Coba foto dengan pencahayaan lebih terang.")
+            except Exception as e:
+                st.error(f"Terjadi kesalahan: {e}")
+
+# ====================== FOOTER ======================
+st.markdown("---")
+st.markdown("**CekGizi** • Prototype Gratis menggunakan Streamlit + Google Gemini")
+
+# Sidebar Info
+with st.sidebar:
+    st.header("Cara Pakai")
+    st.markdown("""
+    1. Ambil foto makanan/jajanan
+    2. Tekan tombol **Analisis dengan AI**
+    3. Tunggu hasilnya
+    """)
     
-    if st.button("🔍 Cek Kandungan Gizinya", type="primary"):
-        with st.spinner("AI sedang menerawang makanan ini..."):
-            
-            hasil = analyze_food_image(image)
-            
-            if "error" in hasil:
-                # Menampilkan pesan error ASLI agar kita tahu masalahnya
-                st.error(f"Gagal memproses. Detail teknis: {hasil['error']}")
-            else:
-                st.success(f"Ketemu! Ini sepertinya: **{hasil.get('nama_makanan', 'Makanan Tidak Diketahui')}**")
-                
-                kolom1, kolom2, kolom3, kolom4 = st.columns(4)
-                
-                with kolom1:
-                    st.metric(label="🔥 Kalori", value=f"{hasil.get('kalori', 0)} kcal")
-                with kolom2:
-                    st.metric(label="🥩 Protein", value=f"{hasil.get('protein', 0)} g")
-                with kolom3:
-                    st.metric(label="🍚 Karbo", value=f"{hasil.get('karbohidrat', 0)} g")
-                with kolom4:
-                    st.metric(label="🧈 Lemak", value=f"{hasil.get('lemak', 0)} g")
-                
-                st.info(f"💡 **Tips:** {hasil.get('tips_kesehatan', 'Makan sewajarnya saja.')}")
+    st.info("💡 **Tips foto yang bagus:**\n• Pencahayaan terang\n• Makanan terlihat jelas\n• Tidak terlalu banyak jenis makanan sekaligus")
