@@ -22,35 +22,50 @@ genai.configure(api_key=api_key)
 model = genai.GenerativeModel('gemini-1.5-flash')
 
 # ==========================================
-# FUNGSI BERTANYA KE AI
+# FUNGSI BERTANYA KE AI (VERSI LEBIH AMAN)
 # ==========================================
 def analyze_food_image(image):
     system_prompt = """
-Kamu adalah ahli gizi profesional asal Indonesia. Tugasmu adalah menganalisis foto makanan ini.
-    Fokus utamamu adalah mengenali makanan, lauk-pauk, dan jajanan khas Indonesia (seperti bakso, siomay, cilok, martabak, gorengan, nasi goreng, dll).
+    Kamu adalah ahli gizi profesional. Tugasmu menganalisis foto makanan ini.
+    Berikan estimasi nutrisinya untuk 1 porsi standar.
     
-    Identifikasi apa nama makanan/jajanan ini, lalu berikan estimasi nutrisinya untuk 1 porsi standar masyarakat Indonesia.
-    Jika gambar kurang jelas, tetap berikan tebakan terbaikmu yang paling mendekati bentuk visual tersebut.
-    
-    PENTING: Kamu HANYA boleh merespons dengan format JSON yang valid. Jangan tambahkan teks lain atau penjelasan apapun.
-    Gunakan format ini persis:
+    PENTING: Kamu HANYA boleh merespons dengan format JSON murni. Jangan ada kalimat pembuka/penutup.
+    Format wajib:
     {
-        "nama_makanan": "Nama Jajanan/Makanan",
+        "nama_makanan": "Nama Makanan",
         "kalori": 250,
         "protein": 10,
         "karbohidrat": 30,
         "lemak": 15,
-        "tips_kesehatan": "Kalimat singkat tentang saran konsumsi dengan gaya bahasa santai."
+        "tips_kesehatan": "Saran konsumsi."
     }
     """
-
+    
     try:
+        # PENTING: Mengubah gambar ke format dasar (RGB) agar AI tidak bingung
+        if image.mode != 'RGB':
+            image = image.convert('RGB')
+            
         response = model.generate_content([system_prompt, image])
-        response_text = response.text.replace('```json\n', '').replace('```', '').strip()
+        
+        # Mengambil teks balasan
+        response_text = response.text
+        
+        # Membersihkan tanda kutip backtick (```) dari respons AI jika ada
+        if "```json" in response_text:
+            response_text = response_text.split("```json")[1].split("```")[0].strip()
+        elif "```" in response_text:
+            response_text = response_text.split("```")[1].split("```")[0].strip()
+            
         data = json.loads(response_text)
         return data
+        
+    except json.JSONDecodeError:
+        # Jika AI gagal memberikan JSON, tampilkan balasan ngawurnya
+        return {"error": f"AI menjawab dengan format yang salah. Jawaban AI: {response.text}"}
     except Exception as e:
-        return {"error": str(e)}
+        # Jika ada error dari sistem (misal API limit, atau koneksi)
+        return {"error": f"Sistem Google merespons: {str(e)}"}
 
 # ==========================================
 # TAMPILAN APLIKASI WEB
@@ -72,18 +87,26 @@ with tab_galeri:
     if galeri:
         image_file = galeri
 
+# ==========================================
+# JIKA GAMBAR SUDAH DIMASUKKAN
+# ==========================================
 if image_file is not None:
     image = Image.open(image_file)
     st.image(image, caption="Foto yang akan dianalisis", use_container_width=True)
-
+    
     if st.button("🔍 Cek Kandungan Gizinya", type="primary"):
         with st.spinner("AI sedang menerawang makanan ini..."):
+            
             hasil = analyze_food_image(image)
+            
             if "error" in hasil:
-                st.error("Terjadi kesalahan. Pastikan fotonya jelas atau cek koneksi internet.")
+                # Menampilkan pesan error ASLI agar kita tahu masalahnya
+                st.error(f"Gagal memproses. Detail teknis: {hasil['error']}")
             else:
                 st.success(f"Ketemu! Ini sepertinya: **{hasil.get('nama_makanan', 'Makanan Tidak Diketahui')}**")
+                
                 kolom1, kolom2, kolom3, kolom4 = st.columns(4)
+                
                 with kolom1:
                     st.metric(label="🔥 Kalori", value=f"{hasil.get('kalori', 0)} kcal")
                 with kolom2:
@@ -92,4 +115,5 @@ if image_file is not None:
                     st.metric(label="🍚 Karbo", value=f"{hasil.get('karbohidrat', 0)} g")
                 with kolom4:
                     st.metric(label="🧈 Lemak", value=f"{hasil.get('lemak', 0)} g")
+                
                 st.info(f"💡 **Tips:** {hasil.get('tips_kesehatan', 'Makan sewajarnya saja.')}")
