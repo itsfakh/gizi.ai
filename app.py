@@ -26,9 +26,12 @@ model = genai.GenerativeModel('gemini-1.5-flash')
 # ==========================================
 def analyze_food_image(image):
     system_prompt = """
-    Kamu adalah ahli gizi profesional. Tugasmu adalah menganalisis foto makanan ini.
-    Identifikasi apa nama makanan/jajanan ini, lalu berikan estimasi nutrisinya untuk 1 porsi standar.
-
+Kamu adalah ahli gizi profesional asal Indonesia. Tugasmu adalah menganalisis foto makanan ini.
+    Fokus utamamu adalah mengenali makanan, lauk-pauk, dan jajanan khas Indonesia (seperti bakso, siomay, cilok, martabak, gorengan, nasi goreng, dll).
+    
+    Identifikasi apa nama makanan/jajanan ini, lalu berikan estimasi nutrisinya untuk 1 porsi standar masyarakat Indonesia.
+    Jika gambar kurang jelas, tetap berikan tebakan terbaikmu yang paling mendekati bentuk visual tersebut.
+    
     PENTING: Kamu HANYA boleh merespons dengan format JSON yang valid. Jangan tambahkan teks lain atau penjelasan apapun.
     Gunakan format ini persis:
     {
@@ -37,7 +40,7 @@ def analyze_food_image(image):
         "protein": 10,
         "karbohidrat": 30,
         "lemak": 15,
-        "tips_kesehatan": "Kalimat singkat tentang saran konsumsi."
+        "tips_kesehatan": "Kalimat singkat tentang saran konsumsi dengan gaya bahasa santai."
     }
     """
 
