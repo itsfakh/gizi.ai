@@ -62,6 +62,7 @@ st.markdown("""
     box-shadow: 0px 4px 15px rgba(0,0,0,0.08);
     border: 1px solid #e5e7eb;
 }
+
 /* Button */
 .stButton > button {
     width: 100%;
