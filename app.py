@@ -286,31 +286,19 @@ Jangan gunakan penjelasan tambahan.
                     unsafe_allow_html=True
                 )
 
-                col1, col2, col3, col4 = st.columns(4)
+               col1, col2, col3, col4 = st.columns(4)
 
-                with col1:
-                    st.metric(
-                        "🔥 Kalori",
-                        data["kalori_kcal"]
-                    )
+with col1:
+    st.metric("🔥 Kalori", data["kalori_kcal"])
 
-                with col2:
-                    st.metric(
-                        "💪 Protein",
-                        data["protein_g"]
-                    )
+with col2:
+    st.metric("💪 Protein", data["protein_g"])
 
-                with col3:
-                    st.metric(
-                        "🍚 Karbohidrat",
-                        data["karbohidrat_g"]
-                    )
+with col3:
+    st.metric("🍚 Karbohidrat", data["karbohidrat_g"])
 
-                with col4:
-                    st.metric(
-                        "🥑 Lemak",
-                        data["lemak_g"]
-                    )
+with col4:
+    st.metric("🥑 Lemak", data["lemak_g"])
 
                 st.markdown("<br>", unsafe_allow_html=True)
 
