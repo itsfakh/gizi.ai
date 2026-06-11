@@ -324,11 +324,18 @@ Jangan gunakan penjelasan tambahan.
                     unsafe_allow_html=True
                 )
 
-            except Exception as e:
+except Exception as e:
 
-                st.error(
-                    f"Gagal menganalisis gambar: {e}"
-                )
+    error_text = str(e)
+
+    if "429" in error_text:
+        st.warning(
+            "⚠️ Kuota Gemini sementara habis. Silakan coba lagi beberapa saat lagi."
+        )
+    else:
+        st.error(
+            f"Gagal menganalisis gambar: {e}"
+        )
 
 # ==================================
 # FOOTER
