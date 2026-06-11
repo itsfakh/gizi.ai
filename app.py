@@ -107,6 +107,19 @@ st.markdown("""
 .stSuccess {
     border-radius: 15px;
 }
+/* Paksa warna metric */
+[data-testid="metric-container"] * {
+    color: #111827 !important;
+}
+
+[data-testid="stMetricValue"] {
+    color: #111827 !important;
+    font-weight: 700 !important;
+}
+
+[data-testid="stMetricLabel"] {
+    color: #374151 !important;
+}
 
 </style>
 """, unsafe_allow_html=True)
@@ -215,21 +228,22 @@ with right_col:
 
 if image_file:
 
-    image = Image.open(image_file)
+image = Image.open(image_file)
 
-    st.markdown("<br>", unsafe_allow_html=True)
+st.markdown("<br>", unsafe_allow_html=True)
 
-    analyze = st.button(
-        "🔍 Analisis Nutrisi"
-    )
+analyze = st.button(
+    "🔍 Analisis Nutrisi"
+)
 
-    if analyze:
+if analyze:
 
-        with st.spinner(
-            "🤖 AI sedang menganalisis makanan..."
-        ):
+    with st.spinner(
+        "🤖 AI sedang menganalisis makanan..."
+    ):
 
-            prompt = """
+        prompt = """
+
 Anda adalah ahli gizi profesional.
 
 Lihat gambar makanan yang diberikan.
@@ -237,105 +251,108 @@ Lihat gambar makanan yang diberikan.
 Balas HANYA dalam format JSON berikut:
 
 {
-  "nama_makanan":"",
-  "kalori_kcal":"",
-  "protein_g":"",
-  "karbohidrat_g":"",
-  "lemak_g":"",
-  "tips":""
+"nama_makanan":"",
+"kalori_kcal":"",
+"protein_g":"",
+"karbohidrat_g":"",
+"lemak_g":"",
+"tips":""
 }
 
 Jangan gunakan markdown.
 Jangan gunakan penjelasan tambahan.
 """
 
-            try:
+        try:
 
-                response = client.models.generate_content(
-                    model="gemini-2.5-flash",
-                    contents=[
-                        prompt,
-                        image
-                    ]
-                )
+            response = client.models.generate_content(
+                model="gemini-2.5-flash",
+                contents=[
+                    prompt,
+                    image
+                ]
+            )
 
-                result_text = response.text
+            result_text = response.text
 
-                result_text = result_text.replace(
-                    "```json",
-                    ""
-                ).replace(
-                    "```",
-                    ""
-                ).strip()
+            result_text = result_text.replace(
+                "```json",
+                ""
+            ).replace(
+                "```",
+                ""
+            ).strip()
 
-                data = json.loads(
-                    result_text
-                )
+            data = json.loads(
+                result_text
+            )
 
-                st.success(
-                    "Analisis berhasil!"
-                )
+            st.success(
+                "Analisis berhasil!"
+            )
 
-                st.markdown(
-                    f"""
-                    <div class="card">
+            st.markdown(
+                f"""
+                <div class="card">
                     <h2>🍽️ {data['nama_makanan']}</h2>
-                    </div>
-                    """,
-                    unsafe_allow_html=True
+                </div>
+                """,
+                unsafe_allow_html=True
+            )
+
+            col1, col2, col3, col4 = st.columns(4)
+
+            with col1:
+                st.metric(
+                    "🔥 Kalori",
+                    data["kalori_kcal"]
                 )
 
-                col1, col2, col3, col4 = st.columns(4)
+            with col2:
+                st.metric(
+                    "💪 Protein",
+                    data["protein_g"]
+                )
 
-                with col1:
-                    st.metric(
-                        "🔥 Kalori",
-                        data["kalori_kcal"]
-                    )
+            with col3:
+                st.metric(
+                    "🍚 Karbohidrat",
+                    data["karbohidrat_g"]
+                )
 
-                with col2:
-                    st.metric(
-                        "💪 Protein",
-                        data["protein_g"]
-                    )
+            with col4:
+                st.metric(
+                    "🥑 Lemak",
+                    data["lemak_g"]
+                )
 
-                with col3:
-                    st.metric(
-                        "🍚 Karbohidrat",
-                        data["karbohidrat_g"]
-                    )
+            st.markdown("<br>", unsafe_allow_html=True)
 
-                with col4:
-                    st.metric(
-                        "🥑 Lemak",
-                        data["lemak_g"]
-                    )
-
-                st.markdown("<br>", unsafe_allow_html=True)
-
-                st.markdown(
-                    f"""
-                    <div class="card">
+            st.markdown(
+                f"""
+                <div class="card">
                     <h3>💡 Tips Kesehatan</h3>
                     <p>{data['tips']}</p>
-                    </div>
-                    """,
-                    unsafe_allow_html=True
+                </div>
+                """,
+                unsafe_allow_html=True
+            )
+
+        except Exception as e:
+
+            error_text = str(e)
+
+            if "429" in error_text:
+
+                st.warning(
+                    "⚠️ Kuota Gemini sedang habis. Silakan tunggu beberapa saat atau gunakan API Key lain."
                 )
 
-except Exception as e:
+            else:
 
-    error_text = str(e)
-
-    if "429" in error_text:
-        st.warning(
-            "⚠️ Kuota Gemini sementara habis. Silakan coba lagi beberapa saat lagi."
-        )
-    else:
-        st.error(
-            f"Gagal menganalisis gambar: {e}"
-        )
+                st.error(
+                    f"Gagal menganalisis gambar: {e}"
+                )
 
 # ==================================
 # FOOTER
