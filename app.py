@@ -7,8 +7,7 @@ from google import genai
 # KONFIGURASI HALAMAN
 # ==========================
 
-st.set_page_config(
-    st.markdown("""
+st.set_page_config(st.markdown("""
 <style>
 
 /* Background utama */
