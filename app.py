@@ -120,6 +120,47 @@ st.markdown("""
 [data-testid="stMetricLabel"] {
     color: #374151 !important;
 }
+/* Semua teks Streamlit */
+label,
+p,
+span,
+small,
+div {
+    color: #111827 !important;
+}
+
+/* Label kamera */
+[data-testid="stCameraInput"] label {
+    color: #111827 !important;
+    font-weight: 600 !important;
+}
+
+/* Label file uploader */
+[data-testid="stFileUploader"] label {
+    color: #111827 !important;
+    font-weight: 600 !important;
+}
+
+/* Tab Kamera dan Upload */
+button[data-baseweb="tab"] {
+    color: #111827 !important;
+    font-weight: 600 !important;
+}
+
+/* Info box */
+[data-testid="stAlert"] {
+    color: #111827 !important;
+}
+
+/* Teks di dalam uploader */
+[data-testid="stFileUploader"] * {
+    color: #111827 !important;
+}
+
+/* Teks kamera */
+[data-testid="stCameraInput"] * {
+    color: #111827 !important;
+}
 
 </style>
 """, unsafe_allow_html=True)
