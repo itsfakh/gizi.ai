@@ -8,9 +8,77 @@ from google import genai
 # ==========================
 
 st.set_page_config(
-    page_title="CekGizi AI",
-    page_icon="🥗",
-    layout="wide"
+    st.markdown("""
+<style>
+
+/* Background utama */
+.stApp{
+    background: linear-gradient(
+        135deg,
+        #f8fafc 0%,
+        #ecfdf5 100%
+    );
+}
+
+/* Header */
+.main-title{
+    text-align:center;
+    padding:20px;
+    border-radius:20px;
+    background: linear-gradient(
+        90deg,
+        #10b981,
+        #22c55e
+    );
+    color:white;
+    font-size:40px;
+    font-weight:bold;
+    box-shadow:0 4px 15px rgba(0,0,0,0.1);
+}
+
+/* Card */
+.card{
+    background:white;
+    padding:20px;
+    border-radius:20px;
+    box-shadow:0 4px 20px rgba(0,0,0,0.08);
+    margin-bottom:15px;
+}
+
+/* Metric */
+[data-testid="metric-container"]{
+    background:white;
+    border-radius:15px;
+    padding:15px;
+    box-shadow:0 4px 15px rgba(0,0,0,0.08);
+    border:1px solid #e5e7eb;
+}
+
+/* Tombol */
+.stButton > button{
+    width:100%;
+    background:#10b981;
+    color:white;
+    border:none;
+    border-radius:15px;
+    height:50px;
+    font-size:18px;
+    font-weight:600;
+}
+
+.stButton > button:hover{
+    background:#059669;
+}
+
+/* Upload area */
+[data-testid="stFileUploader"]{
+    background:white;
+    border-radius:20px;
+    padding:15px;
+}
+
+</style>
+""", unsafe_allow_html=True)
 )
 
 st.title("🥗 CekGizi - Deteksi Kalori Jajananmu")
