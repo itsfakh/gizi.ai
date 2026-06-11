@@ -80,7 +80,14 @@ from google import genai
 """, unsafe_allow_html=True)
 )
 
-st.title("🥗 CekGizi - Deteksi Kalori Jajananmu")
+st.markdown("""
+<div class="main-title">
+🥗 CekGizi AI<br>
+<span style="font-size:18px">
+Deteksi Kalori & Nutrisi Makanan dengan AI
+</span>
+</div>
+""", unsafe_allow_html=True)
 
 st.write("""
 Upload foto makanan atau ambil foto langsung dari kamera.
