@@ -326,4 +326,3 @@ CekGizi AI • Powered by Gemini AI
 </p>
 </center>
 """, unsafe_allow_html=True)
-```
