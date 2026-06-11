@@ -1,152 +1,217 @@
+````python
 import json
 import streamlit as st
 from PIL import Image
 from google import genai
 
-# ==========================
-# KONFIGURASI HALAMAN
-# ==========================
+# ==================================
+# PAGE CONFIG
+# ==================================
 
-(st.markdown("""
+st.set_page_config(
+    page_title="CekGizi AI",
+    page_icon="🥗",
+    layout="wide"
+)
+
+# ==================================
+# CUSTOM CSS
+# ==================================
+
+st.markdown("""
 <style>
 
-/* Background utama */
-.stApp{
+/* Background */
+.stApp {
     background: linear-gradient(
         135deg,
-        #f8fafc 0%,
-        #ecfdf5 100%
+        #f0fdf4,
+        #ecfeff
     );
 }
 
-/* Header */
-.main-title{
-    text-align:center;
-    padding:20px;
-    border-radius:20px;
+/* Hero Section */
+.hero {
     background: linear-gradient(
         90deg,
         #10b981,
         #22c55e
     );
-    color:white;
-    font-size:40px;
-    font-weight:bold;
-    box-shadow:0 4px 15px rgba(0,0,0,0.1);
+    padding: 30px;
+    border-radius: 25px;
+    text-align: center;
+    color: white;
+    margin-bottom: 25px;
+    box-shadow: 0px 4px 20px rgba(0,0,0,0.1);
 }
 
-/* Card */
-.card{
-    background:white;
-    padding:20px;
-    border-radius:20px;
-    box-shadow:0 4px 20px rgba(0,0,0,0.08);
-    margin-bottom:15px;
+/* Cards */
+.card {
+    background: white;
+    padding: 20px;
+    border-radius: 20px;
+    box-shadow: 0px 4px 20px rgba(0,0,0,0.08);
+    margin-bottom: 20px;
 }
 
-/* Metric */
-[data-testid="metric-container"]{
-    background:white;
-    border-radius:15px;
-    padding:15px;
-    box-shadow:0 4px 15px rgba(0,0,0,0.08);
-    border:1px solid #e5e7eb;
+/* Metrics */
+[data-testid="metric-container"] {
+    background: white;
+    border-radius: 20px;
+    padding: 15px;
+    box-shadow: 0px 4px 15px rgba(0,0,0,0.08);
+    border: 1px solid #e5e7eb;
 }
 
-/* Tombol */
-.stButton > button{
-    width:100%;
-    background:#10b981;
-    color:white;
-    border:none;
-    border-radius:15px;
-    height:50px;
-    font-size:18px;
-    font-weight:600;
+/* Button */
+.stButton > button {
+    width: 100%;
+    height: 55px;
+    border-radius: 15px;
+    border: none;
+    background: #10b981;
+    color: white;
+    font-size: 18px;
+    font-weight: bold;
 }
 
-.stButton > button:hover{
-    background:#059669;
+.stButton > button:hover {
+    background: #059669;
+    color: white;
 }
 
-/* Upload area */
-[data-testid="stFileUploader"]{
-    background:white;
-    border-radius:20px;
-    padding:15px;
+/* Upload */
+[data-testid="stFileUploader"] {
+    background: white;
+    border-radius: 15px;
+    padding: 10px;
+}
+
+/* Success */
+.stSuccess {
+    border-radius: 15px;
 }
 
 </style>
 """, unsafe_allow_html=True)
-)
+
+# ==================================
+# HEADER
+# ==================================
 
 st.markdown("""
-<div class="main-title">
-🥗 CekGizi AI<br>
-<span style="font-size:18px">
-Deteksi Kalori & Nutrisi Makanan dengan AI
-</span>
+<div class="hero">
+    <h1>🥗 CekGizi AI</h1>
+    <p style="font-size:18px;">
+        Deteksi Kalori & Nutrisi Makanan dengan AI
+    </p>
 </div>
 """, unsafe_allow_html=True)
 
-st.write("""
-Upload foto makanan atau ambil foto langsung dari kamera.
+# ==================================
+# DESKRIPSI
+# ==================================
 
-AI akan memberikan:
+st.markdown("""
+<div class="card">
+<h3>✨ Cara Menggunakan</h3>
+
+1️⃣ Upload foto makanan atau gunakan kamera
+
+2️⃣ Klik tombol Analisis Nutrisi
+
+3️⃣ AI akan memperkirakan:
+
 - Nama makanan
-- Estimasi kalori
+- Kalori
 - Protein
 - Karbohidrat
 - Lemak
 - Tips kesehatan
-""")
 
-# ==========================
+</div>
+""", unsafe_allow_html=True)
+
+# ==================================
 # API KEY
-# ==========================
+# ==================================
 
 try:
     api_key = st.secrets["GEMINI_API_KEY"]
-except:
+except Exception:
     st.error("GEMINI_API_KEY tidak ditemukan.")
     st.stop()
 
 client = genai.Client(api_key=api_key)
 
-# ==========================
+# ==================================
 # INPUT FOTO
-# ==========================
+# ==================================
 
-tab1, tab2 = st.tabs(["📷 Kamera", "📁 Upload"])
+left_col, right_col = st.columns([1, 1])
 
-with tab1:
-    camera_image = st.camera_input("Ambil Foto Makanan")
+with left_col:
 
-with tab2:
+    st.markdown("""
+    <div class="card">
+        <h3>📷 Upload Foto Makanan</h3>
+        Gunakan kamera atau unggah dari galeri.
+    </div>
+    """, unsafe_allow_html=True)
+
+    camera_image = st.camera_input(
+        "Ambil Foto"
+    )
+
     uploaded_file = st.file_uploader(
-        "Upload Foto",
+        "Atau Upload Foto",
         type=["jpg", "jpeg", "png"]
     )
 
 image_file = camera_image if camera_image else uploaded_file
 
-# ==========================
+with right_col:
+
+    st.markdown("""
+    <div class="card">
+        <h3>🖼️ Preview Gambar</h3>
+    </div>
+    """, unsafe_allow_html=True)
+
+    if image_file:
+
+        image = Image.open(image_file)
+
+        st.image(
+            image,
+            use_container_width=True
+        )
+
+    else:
+
+        st.info(
+            "Upload foto makanan untuk melihat preview."
+        )
+
+# ==================================
 # ANALISIS
-# ==========================
+# ==================================
 
 if image_file:
 
     image = Image.open(image_file)
 
-    st.image(
-        image,
-        caption="Gambar yang dianalisis",
-        use_container_width=True
+    st.markdown("<br>", unsafe_allow_html=True)
+
+    analyze = st.button(
+        "🔍 Analisis Nutrisi"
     )
 
-    if st.button("🔍 Analisis Nutrisi"):
+    if analyze:
 
-        with st.spinner("Sedang menganalisis..."):
+        with st.spinner(
+            "🤖 AI sedang menganalisis makanan..."
+        ):
 
             prompt = """
 Anda adalah ahli gizi profesional.
@@ -156,16 +221,16 @@ Lihat gambar makanan yang diberikan.
 Balas HANYA dalam format JSON berikut:
 
 {
-  "nama_makanan": "",
-  "kalori_kcal": "",
-  "protein_g": "",
-  "karbohidrat_g": "",
-  "lemak_g": "",
-  "tips": ""
+  "nama_makanan":"",
+  "kalori_kcal":"",
+  "protein_g":"",
+  "karbohidrat_g":"",
+  "lemak_g":"",
+  "tips":""
 }
 
-Jangan menambahkan markdown.
-Jangan menambahkan penjelasan lain.
+Jangan gunakan markdown.
+Jangan gunakan penjelasan tambahan.
 """
 
             try:
@@ -180,7 +245,6 @@ Jangan menambahkan penjelasan lain.
 
                 result_text = response.text
 
-                # Bersihkan jika model menambahkan ```json
                 result_text = result_text.replace(
                     "```json",
                     ""
@@ -189,42 +253,59 @@ Jangan menambahkan penjelasan lain.
                     ""
                 ).strip()
 
-                data = json.loads(result_text)
+                data = json.loads(
+                    result_text
+                )
 
-                st.success("Analisis berhasil!")
+                st.success(
+                    "Analisis berhasil!"
+                )
 
-                st.subheader(
-                    f"🍽️ {data['nama_makanan']}"
+                st.markdown(
+                    f"""
+                    <div class="card">
+                    <h2>🍽️ {data['nama_makanan']}</h2>
+                    </div>
+                    """,
+                    unsafe_allow_html=True
                 )
 
                 col1, col2, col3, col4 = st.columns(4)
 
                 with col1:
                     st.metric(
-                        "Kalori",
+                        "🔥 Kalori",
                         data["kalori_kcal"]
                     )
 
                 with col2:
                     st.metric(
-                        "Protein",
+                        "💪 Protein",
                         data["protein_g"]
                     )
 
                 with col3:
                     st.metric(
-                        "Karbohidrat",
+                        "🍚 Karbohidrat",
                         data["karbohidrat_g"]
                     )
 
                 with col4:
                     st.metric(
-                        "Lemak",
+                        "🥑 Lemak",
                         data["lemak_g"]
                     )
 
-                st.info(
-                    f"💡 {data['tips']}"
+                st.markdown("<br>", unsafe_allow_html=True)
+
+                st.markdown(
+                    f"""
+                    <div class="card">
+                    <h3>💡 Tips Kesehatan</h3>
+                    <p>{data['tips']}</p>
+                    </div>
+                    """,
+                    unsafe_allow_html=True
                 )
 
             except Exception as e:
@@ -232,3 +313,18 @@ Jangan menambahkan penjelasan lain.
                 st.error(
                     f"Gagal menganalisis gambar: {e}"
                 )
+
+# ==================================
+# FOOTER
+# ==================================
+
+st.markdown("""
+<br><br>
+
+<center>
+<p style="color:gray;">
+CekGizi AI • Powered by Gemini AI
+</p>
+</center>
+""", unsafe_allow_html=True)
+````
