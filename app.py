@@ -62,6 +62,22 @@ st.markdown("""
     box-shadow: 0px 4px 15px rgba(0,0,0,0.08);
     border: 1px solid #e5e7eb;
 }
+/* Label metric */
+[data-testid="metric-container"] label {
+    color: #374151 !important;
+    font-weight: 600 !important;
+}
+
+/* Nilai metric */
+[data-testid="stMetricValue"] {
+    color: #111827 !important;
+    font-weight: 700 !important;
+}
+
+/* Delta metric (jika ada) */
+[data-testid="stMetricDelta"] {
+    color: #10b981 !important;
+}
 
 /* Button */
 .stButton > button {
