@@ -56,13 +56,12 @@ st.markdown("""
 
 /* Metrics */
 [data-testid="metric-container"] {
-    background: white;
+    background: white !important;
     border-radius: 20px;
     padding: 15px;
     box-shadow: 0px 4px 15px rgba(0,0,0,0.08);
     border: 1px solid #e5e7eb;
 }
-
 /* Button */
 .stButton > button {
     width: 100%;
