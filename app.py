@@ -47,10 +47,22 @@ st.markdown("""
 /* Cards */
 .card {
     background: white;
+    color: #111827 !important;
     padding: 20px;
     border-radius: 20px;
     box-shadow: 0px 4px 20px rgba(0,0,0,0.08);
     margin-bottom: 20px;
+}
+.card h1,
+.card h2,
+.card h3,
+.card h4,
+.card h5,
+.card h6,
+.card p,
+.card li,
+.card span {
+    color: #111827 !important;
 }
 
 /* Metrics */
@@ -93,6 +105,18 @@ st.markdown("""
 
 </style>
 """, unsafe_allow_html=True)
+p,
+li,
+label,
+span,
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+    color: #111827 !important;
+}
 
 # ==================================
 # HEADER
