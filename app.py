@@ -319,11 +319,14 @@ Jangan gunakan penjelasan tambahan.
                     unsafe_allow_html=True
                 )
 
-            except Exception as e:
-
-                st.error(
-                    f"Gagal menganalisis gambar: {e}"
-                )
+except Exception as e:
+                error_text = str(e)
+                if "429" in error_text:
+                    st.warning("⚠️ Kuota sedang beristirahat. Silakan tunggu 1 menit lalu coba lagi.")
+                elif "503" in error_text:
+                    st.warning("⏳ Server AI sedang penuh antrean. Silakan tunggu beberapa detik dan klik Analisis lagi!")
+                else:
+                    st.error(f"Gagal menganalisis gambar: {e}")
 
 # ==================================
 # FOOTER
