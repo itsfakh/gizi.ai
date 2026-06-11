@@ -227,7 +227,6 @@ with right_col:
 # ==================================
 
 if image_file:
-
 image = Image.open(image_file)
 
 st.markdown("<br>", unsafe_allow_html=True)
